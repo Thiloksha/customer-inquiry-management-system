@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Inter', sans-serif;
+  color: #172033;
+  background: #f6f8fc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-primary: #3157d5;
+  --color-primary-hover: #2647b8;
+  --color-text: #172033;
+  --color-muted: #667085;
+  --color-border: #e4e8f0;
+  --color-surface: #ffffff;
+  --color-background: #f6f8fc;
+  --color-danger: #c93636;
+  --color-success: #16794b;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-card: 0 2px 8px rgb(16 24 40 / 4%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.7px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+p {
+  line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(49 87 213 / 25%);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #dce5ff;
+  color: #172033;
+}
