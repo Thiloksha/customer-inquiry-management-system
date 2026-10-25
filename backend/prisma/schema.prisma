@@ -26,6 +26,7 @@ model Staff {
 
 model Inquiry {
   id           String        @id @default(cuid())
+  inquiryNumber Int    @unique @default(autoincrement())
   submissionKey  String        @unique
   
   customerName String

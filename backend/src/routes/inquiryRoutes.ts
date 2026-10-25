@@ -34,6 +34,12 @@ router.get("/", requireAuth, async (req: AuthRequest, res) => {
 
   const { search, status } = validation.data;
 
+  const inquiryNumberMatch = search?.match(/^I?(\d+)$/i);
+
+  const inquiryNumber = inquiryNumberMatch
+    ? Number(inquiryNumberMatch[1])
+    : null;
+
   try {
     const inquiries = await prisma.inquiry.findMany({
       where: {
@@ -60,6 +66,7 @@ router.get("/", requireAuth, async (req: AuthRequest, res) => {
                     mode: "insensitive",
                   },
                 },
+                ...(inquiryNumber !== null ? [{ inquiryNumber }] : []),
               ],
             }
           : {}),
