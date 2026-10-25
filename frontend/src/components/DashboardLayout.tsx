@@ -17,8 +17,8 @@ function DashboardLayout() {
     }`
 
   return (
-    <div className="min-h-screen bg-slate-50 md:pl-64">
-      <aside className="flex min-h-screen flex-col border-r border-slate-200 bg-white md:fixed md:inset-y-0 md:left-0 md:w-64">
+    <div className="min-h-screen bg-slate-50 md:pl-60">
+      <aside className="flex min-h-screen flex-col border-r border-slate-200 bg-white md:fixed md:inset-y-0 md:left-0 md:w-60">
         <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-bold text-white">
             IC
@@ -80,7 +80,7 @@ function DashboardLayout() {
           </span>
         </header>
 
-        <main className="p-5 sm:p-8">
+        <main className="p-5 sm:p-6">
           <Outlet />
         </main>
       </div>

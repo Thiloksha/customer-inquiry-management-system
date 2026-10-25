@@ -43,6 +43,13 @@ function InquiriesPage() {
   const [success, setSuccess] = useState("");
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const [updatingInquiryId, setUpdatingInquiryId] = useState<string | null>(
+    null,
+  );
+  const [statusError, setStatusError] = useState("");
 
   // Reuse this key when confirming or retrying the same submission.
   const submissionKey = useRef<string | null>(null);
@@ -50,7 +57,20 @@ function InquiriesPage() {
   async function loadInquiries() {
     try {
       setError("");
-      const data = await apiRequest("/inquiries");
+      const params = new URLSearchParams();
+
+      if (search.trim()) {
+        params.set("search", search.trim());
+      }
+
+      if (statusFilter) {
+        params.set("status", statusFilter);
+      }
+
+      const query = params.toString();
+      const data = await apiRequest(
+        `/inquiries${query ? `?${query}` : ""}`,
+      );
       setInquiries(data.inquiries);
     } catch (err) {
       const requestError = err as RequestError;
@@ -72,9 +92,41 @@ function InquiriesPage() {
     }
   }
 
+  async function handleStatusChange(
+    inquiryId: string,
+    newStatus: Inquiry["status"],
+  ) {
+    setUpdatingInquiryId(inquiryId);
+    setStatusError("");
+
+    try {
+      await apiRequest(`/inquiries/${inquiryId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      await loadInquiries();
+    } catch (err) {
+      const requestError = err as RequestError;
+
+      if (requestError.status === 401) {
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("staff");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setStatusError(
+        requestError.message || "Unable to update the inquiry status.",
+      );
+    } finally {
+      setUpdatingInquiryId(null);
+    }
+  }
+
   useEffect(() => {
     void loadInquiries();
-  }, []);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     if (searchParams.get("add") === "true") {
@@ -161,7 +213,7 @@ function InquiriesPage() {
   }
 
   return (
-    <main className="space-y-8">
+    <main className="6">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -194,10 +246,10 @@ function InquiriesPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="inquiry-form-title"
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7"
+            className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-2 shadow-2xl sm:p-7"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-6">
+            <div className="mb-4">
               <h2
                 id="inquiry-form-title"
                 className="text-lg font-semibold text-slate-900"
@@ -366,13 +418,75 @@ function InquiriesPage() {
       )}
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {statusError && (
+          <p
+            className="border-b border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700"
+            role="alert"
+          >
+            {statusError}
+          </p>
+        )}
+        
         <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
           <h2 className="text-lg font-semibold text-slate-900">
             Your Inquiries
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            View the inquiries you have submitted.
+            View and manage the inquiries you have submitted.
           </p>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="inquiry-search"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Search inquiries
+              </label>
+              <input
+                id="inquiry-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Customer, contact, or subject..."
+                maxLength={100}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="status-filter"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Filter by status
+              </label>
+              <select
+                id="status-filter"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="">All statuses</option>
+                <option value="NEW">New</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="RESOLVED">Resolved</option>
+              </select>
+            </div>
+          </div>
+
+          {(search || statusFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("");
+              }}
+              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              Clear search and filters
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -399,6 +513,7 @@ function InquiriesPage() {
                   <th className="px-5 py-4 font-semibold">Subject</th>
                   <th className="px-5 py-4 font-semibold">Contact</th>
                   <th className="px-5 py-4 font-semibold">Status</th>
+                  <th className="px-3 py-4 font-semibold">Change Status</th>
                   <th className="px-5 py-4 font-semibold">Date Created</th>
                 </tr>
               </thead>
@@ -427,6 +542,30 @@ function InquiriesPage() {
                       >
                         {inquiry.status.replace("_", " ")}
                       </span>
+                    </td>
+                    <td className="px-3 py-4">
+                      <select
+                        value={inquiry.status}
+                        disabled={updatingInquiryId === inquiry.id}
+                        onChange={(event) =>
+                          void handleStatusChange(
+                            inquiry.id,
+                            event.target.value as Inquiry["status"],
+                          )
+                        }
+                        className="w-30 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-wait disabled:opacity-60"
+                        aria-label={`Change status for ${inquiry.subject}`}
+                      >
+                        <option value="NEW">New</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                      </select>
+
+                      {updatingInquiryId === inquiry.id && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          Updating...
+                        </p>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-slate-500">
                       {new Date(inquiry.createdAt).toLocaleDateString()}
